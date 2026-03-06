@@ -24,7 +24,7 @@ Kanban-доска в стиле Trello, построенная по архите
 npm install
 
 # Создать файл окружения
-cp .env.example .env.development
+cp .env .env.development
 
 # Запустить dev-сервер (порт 3000)
 npm run dev
