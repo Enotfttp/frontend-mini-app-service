@@ -33,12 +33,12 @@ export const RouterErrorBoundary = () => {
         </SecondaryButton>
       </StyledErrorAction>
 
-      {import.meta.env.VITE_APP_STAND === 'development' && error && (
+      {/* {import.meta.env.VITE_APP_STAND === 'development' && error && ( */}
         <StyledErrorDetails>
           <summary>Детали ошибки (только для разработки)</summary>
           <pre>{error.message}</pre>
         </StyledErrorDetails>
-      )}
+      {/* )} */}
     </ErrorContainer>
   );
 };
