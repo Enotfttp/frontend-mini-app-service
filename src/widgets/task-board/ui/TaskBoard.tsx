@@ -17,7 +17,8 @@ const STATUS_ORDER: TaskStatus[] = [
 ];
 
 export const TaskBoard: React.FC = () => {
-  const { data: tasks = [], isLoading, isError } = useGetTasks();
+  const { data, isLoading, isError } = useGetTasks();
+  const tasks = Array.isArray(data) ? data : [];
   const { data: users = [] } = useGetUsers();
   const [dialogOpen, setDialogOpen] = useState(false);
 
