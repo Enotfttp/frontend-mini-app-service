@@ -86,7 +86,8 @@ export const CreateTaskDialog: React.FC<Props> = ({
   creatorId,
 }) => {
   const { mutate: postTask, isPending } = usePostTask();
-  const { data: users = [] } = useGetUsers();
+  const { data: usersData } = useGetUsers();
+  const users = Array.isArray(usersData) ? usersData : [];
 
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
 

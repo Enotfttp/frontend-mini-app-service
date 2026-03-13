@@ -69,7 +69,8 @@ export const CardDetailPanel: React.FC = () => {
 
   const { data: card, isLoading } = useGetCard(selectedCardId ?? '');
   const { mutate } = usePutCard(selectedCardId ?? '');
-  const { data: users = [] } = useGetUsers();
+  const { data: usersData } = useGetUsers();
+  const users = Array.isArray(usersData) ? usersData : [];
 
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 

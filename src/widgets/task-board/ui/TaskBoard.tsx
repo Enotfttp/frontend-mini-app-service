@@ -19,7 +19,8 @@ const STATUS_ORDER: TaskStatus[] = [
 export const TaskBoard: React.FC = () => {
   const { data, isLoading, isError } = useGetTasks();
   const tasks = Array.isArray(data) ? data : [];
-  const { data: users = [] } = useGetUsers();
+  const { data: usersData } = useGetUsers();
+  const users = Array.isArray(usersData) ? usersData : [];
   const [dialogOpen, setDialogOpen] = useState(false);
 
   // Use first user as creator for demo; replace with auth context in production
