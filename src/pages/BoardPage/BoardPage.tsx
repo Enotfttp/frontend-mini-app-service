@@ -11,7 +11,7 @@ import { PageWrapper, StyledAppBar } from './BoardPage.styled';
 
 export const BoardPage = () => {
   const { mode, toggleMode } = useThemeStore();
-
+  console.log("qwe",import.meta.env + "/api");
   return (
     <PageWrapper>
       <StyledAppBar position="static" elevation={0}>
@@ -27,7 +27,7 @@ export const BoardPage = () => {
           </Tooltip>
         </Toolbar>
       </StyledAppBar>
-
+12312312312
       <TaskBoard />
     </PageWrapper>
   );
