@@ -1,3 +1,4 @@
+import { useDroppable } from '@dnd-kit/core';
 import { Chip, Typography } from '@mui/material';
 import React from 'react';
 
@@ -29,9 +30,17 @@ interface Props {
 
 export const TaskColumn: React.FC<Props> = ({ status, tasks, users }) => {
   const config = STATUS_CONFIG[status];
+  const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
-    <ColumnPaper elevation={3}>
+    <ColumnPaper
+      elevation={3}
+      ref={setNodeRef}
+      sx={{
+        bgcolor: isOver ? 'action.hover' : undefined,
+        transition: 'background-color 0.15s',
+      }}
+    >
       <ColumnHeader>
         <Chip size="small" label={config.label} color={config.color} sx={{ fontWeight: 700 }} />
         <Typography variant="caption" color="text.secondary" fontWeight={600}>
@@ -45,7 +54,9 @@ export const TaskColumn: React.FC<Props> = ({ status, tasks, users }) => {
             Нет задач
           </Typography>
         ) : (
-          tasks.map((task) => <TaskCard key={task.id} task={task} users={users} />)
+          tasks.map((task) => (
+            <TaskCard key={task.id} task={task} status={status} users={users} />
+          ))
         )}
       </ColumnCardsList>
     </ColumnPaper>

@@ -1,11 +1,22 @@
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import AddIcon from '@mui/icons-material/Add';
 import { Box, Button, CircularProgress, Typography } from '@mui/material';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { TaskStatus, useGetTasks } from '@entities/task';
+import { ITask, TaskStatus, useGetTasks, useUpdateTask } from '@entities/task';
 import { useGetUsers } from '@entities/user';
 import { CreateTaskDialog } from '@features/create-task';
 
+import { TaskCard } from './TaskCard';
 import { TaskColumn } from './TaskColumn';
 import { BoardContainer } from './TaskBoard.styled';
 
@@ -21,9 +32,10 @@ export const TaskBoard: React.FC = () => {
   const tasks = Array.isArray(data) ? data : [];
   const { data: usersData } = useGetUsers();
   const users = Array.isArray(usersData) ? usersData : [];
+  const { mutate: updateTask } = useUpdateTask();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [activeTask, setActiveTask] = useState<ITask | null>(null);
 
-  // Use first user as creator for demo; replace with auth context in production
   const creatorId = users[0]?.id;
 
   const tasksByStatus = useMemo(() => {
@@ -40,6 +52,41 @@ export const TaskBoard: React.FC = () => {
     });
     return map;
   }, [tasks]);
+
+  const taskMap = useMemo(() => {
+    const m: Record<string, ITask> = {};
+    tasks.forEach((t) => (m[t.id] = t));
+    return m;
+  }, [tasks]);
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+
+  const resolveTargetStatus = useCallback(
+    (overId: string): TaskStatus | null => {
+      if (STATUS_ORDER.includes(overId as TaskStatus)) return overId as TaskStatus;
+      const task = taskMap[overId];
+      return task?.status ?? null;
+    },
+    [taskMap],
+  );
+
+  const handleDragStart = ({ active }: DragStartEvent) => {
+    const task = active.data.current?.task as ITask | undefined;
+    if (task) setActiveTask(task);
+  };
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    setActiveTask(null);
+    if (!over) return;
+
+    const task = active.data.current?.task as ITask | undefined;
+    if (!task) return;
+
+    const newStatus = resolveTargetStatus(over.id as string);
+    if (!newStatus || newStatus === task.status) return;
+
+    updateTask({ id: task.id, payload: { status: newStatus } });
+  };
 
   if (isLoading) {
     return (
@@ -67,16 +114,30 @@ export const TaskBoard: React.FC = () => {
         </Button>
       </Box>
 
-      <BoardContainer>
-        {STATUS_ORDER.map((status) => (
-          <TaskColumn
-            key={status}
-            status={status}
-            tasks={tasksByStatus[status]}
-            users={users}
-          />
-        ))}
-      </BoardContainer>
+      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <BoardContainer>
+          {STATUS_ORDER.map((status) => (
+            <SortableContext
+              key={status}
+              items={tasksByStatus[status].map((t) => t.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <TaskColumn status={status} tasks={tasksByStatus[status]} users={users} />
+            </SortableContext>
+          ))}
+        </BoardContainer>
+
+        <DragOverlay>
+          {activeTask ? (
+            <TaskCard
+              task={activeTask}
+              status={activeTask.status}
+              users={users}
+              isDragOverlay
+            />
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
       <CreateTaskDialog
         open={dialogOpen}

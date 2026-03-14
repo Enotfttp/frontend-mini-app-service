@@ -2,7 +2,7 @@ import Axios, { AxiosRequestConfig } from 'axios';
 
 // Raw Axios instance — use for interceptors setup
 export const axiosClient = Axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: import.meta.env.VITE_API_URL + "/api",
   headers: {
     'Content-Type': 'application/json',
   },

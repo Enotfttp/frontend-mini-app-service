@@ -1,9 +1,11 @@
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Avatar, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import React from 'react';
 
-import { ITask, TaskPriority, TaskType, useDeleteTask } from '@entities/task';
+import { ITask, TaskPriority, TaskStatus, TaskType, useDeleteTask } from '@entities/task';
 import { IUser } from '@entities/user';
 
 import {
@@ -37,17 +39,40 @@ const PRIORITY_CONFIG: Record<
 
 interface Props {
   task: ITask;
+  status: TaskStatus;
   users: IUser[];
+  isDragOverlay?: boolean;
 }
 
-export const TaskCard: React.FC<Props> = ({ task, users }) => {
+export const TaskCard: React.FC<Props> = ({ task, status, users, isDragOverlay }) => {
   const { mutate: removeTask } = useDeleteTask();
 
-  const assignee = users.find((u) => u.id === task.userId);
+  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
+    id: task.id,
+    data: { type: 'task', task, status },
+    disabled: isDragOverlay,
+  });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.35 : 1,
+  };
+
+  const assignee = Array.isArray(users) ? users.find((u) => u.id === task.userId) : undefined;
   const shortId = task.id.length > 8 ? task.id.slice(0, 8).toUpperCase() : task.id;
 
   return (
-    <TaskCardPaper elevation={2} sx={{ '&:hover': { boxShadow: 6 } }}>
+    <TaskCardPaper
+      ref={setNodeRef}
+      style={style}
+      elevation={isDragOverlay ? 12 : 2}
+      sx={{
+        '&:hover': { boxShadow: 6 },
+        cursor: isDragOverlay ? 'default' : isDragging ? 'grabbing' : 'grab',
+      }}
+      {...(isDragOverlay ? {} : { ...attributes, ...listeners })}
+    >
       <TaskCardContent>
         {/* Header: ID + delete */}
         <TaskCardHeader>
@@ -56,6 +81,7 @@ export const TaskCard: React.FC<Props> = ({ task, users }) => {
           </Typography>
           <DeleteTaskButton
             size="small"
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.stopPropagation();
               removeTask(task.id);
