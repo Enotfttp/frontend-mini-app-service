@@ -10,7 +10,6 @@ export const axiosClient = Axios.create({
 
 // Functional wrapper — use in entity/feature API calls
 export const axiosInstance = <T>(config: AxiosRequestConfig): Promise<T> => {
-  console.log(import.meta.env + "/api");
   const source = Axios.CancelToken.source();
   const promise = axiosClient({
     ...config,
