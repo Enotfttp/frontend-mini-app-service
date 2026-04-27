@@ -16,6 +16,7 @@ import {
   TaskCardMeta,
   TaskCardPaper,
 } from './TaskBoard.styled';
+import { useModalManager } from '@features/modal-routing';
 
 // ─── display config ──────────────────────────────────────────────────────────
 
@@ -46,12 +47,16 @@ interface Props {
 
 export const TaskCard: React.FC<Props> = ({ task, status, users, isDragOverlay }) => {
   const { mutate: removeTask } = useDeleteTask();
-
+  const { openModal } = useModalManager();
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: task.id,
     data: { type: 'task', task, status },
     disabled: isDragOverlay,
   });
+
+  const handleOpenModal = () => {
+    openModal('detail-info', { params: { id: task.id, type: 'task' } });
+  };
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -72,6 +77,7 @@ export const TaskCard: React.FC<Props> = ({ task, status, users, isDragOverlay }
         cursor: isDragOverlay ? 'default' : isDragging ? 'grabbing' : 'grab',
       }}
       {...(isDragOverlay ? {} : { ...attributes, ...listeners })}
+      onClick={handleOpenModal}
     >
       <TaskCardContent>
         {/* Header: ID + delete */}
