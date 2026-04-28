@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { createTask, deleteTask, getAllTasks, getTask, updateTask } from './api';
-import { ICreateTaskPayload, IUpdateTaskPayload } from './types';
+import { createTask, deleteTask, getAllTasks, getTask, postTaskComment, updateTask } from './api';
+import { ICreateTaskCommentPayload, ICreateTaskPayload, IUpdateTaskPayload } from './types';
 
 export const useGetTasks = () =>
   useQuery({
@@ -35,8 +35,22 @@ export const useUpdateTask = () => {
   return useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: IUpdateTaskPayload }) =>
       updateTask(id, payload),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['task', variables.id] });
+    },
+  });
+};
+
+export const usePostTaskComment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ taskId, payload }: { taskId: string; payload: ICreateTaskCommentPayload }) =>
+      postTaskComment(taskId, payload),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['task', variables.taskId] });
     },
   });
 };

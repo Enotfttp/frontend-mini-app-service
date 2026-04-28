@@ -1,6 +1,6 @@
 import { axiosInstance } from '@shared/api';
 
-import { ICreateTaskPayload, ITask, IUpdateTaskPayload } from './types';
+import { ICreateTaskCommentPayload, ICreateTaskPayload, ITask, IUpdateTaskPayload } from './types';
 
 export const getAllTasks = (): Promise<ITask[]> =>
   axiosInstance({ url: '/tasks', method: 'GET' });
@@ -16,3 +16,6 @@ export const updateTask = (id: string, payload: IUpdateTaskPayload): Promise<ITa
 
 export const deleteTask = (id: string): Promise<void> =>
   axiosInstance({ url: `/tasks/${id}`, method: 'DELETE' });
+
+export const postTaskComment = (taskId: string, payload: ICreateTaskCommentPayload): Promise<ITask> =>
+  axiosInstance({ url: `/tasks/${taskId}/comments`, method: 'POST', data: payload });

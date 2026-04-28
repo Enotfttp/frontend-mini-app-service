@@ -73,7 +73,12 @@ export const ModalProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           ? { 'aria-labelledby': 'app-modal-title' as const }
           : { 'aria-label': 'Диалог' as const })}
         slotProps={{
-          backdrop: { sx: { backgroundColor: 'rgba(0,0,0,0.5)' } },
+          backdrop: {
+            sx: (theme) => ({
+              backgroundColor:
+                theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.72)' : 'rgba(0,0,0,0.48)',
+            }),
+          },
         }}
       >
         <ModalWrapper $customWidth={modalState.customWidth ?? 'auto'}>

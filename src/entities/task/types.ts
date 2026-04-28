@@ -18,8 +18,17 @@ export enum TaskPriority {
   CRITICAL = 'CRITICAL',
 }
 
+export interface ITaskComment {
+  id: string;
+  text: string;
+  userId: string;
+  userName: string;
+  createdAt: string;
+}
+
 export interface ITask {
   id: string;
+  taskNumber: number;
   title: string;
   description?: string;
   createDateTime: string;
@@ -29,6 +38,7 @@ export interface ITask {
   priority: TaskPriority;
   userId?: string;
   creatorId?: string;
+  comments?: ITaskComment[];
 }
 
 export interface ICreateTaskPayload {
@@ -50,4 +60,9 @@ export interface IUpdateTaskPayload {
   type?: TaskType;
   priority?: TaskPriority;
   userId?: string;
+}
+
+export interface ICreateTaskCommentPayload {
+  userId: string;
+  text: string;
 }
