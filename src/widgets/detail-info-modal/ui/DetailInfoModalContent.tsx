@@ -1,43 +1,33 @@
-import { useGetTask } from '@entities/task';
-import { TaskPriority, TaskStatus, TaskType } from '@entities/task';
+import type { IUpdateTaskPayload } from '@entities/task';
+import { useGetTask, usePostTaskComment, useUpdateTask } from '@entities/task';
+import { useGetUsers } from '@entities/user';
 import { StyleBox } from './DetailInfoModal.styled';
-import { Alert, Chip, Divider, Stack, Typography } from '@mui/material';
+import { TaskCommentsSection } from './TaskCommentsSection';
+import { TaskEditFields } from './TaskEditFields';
+import { Alert, Divider, Stack } from '@mui/material';
+import { useMemo, useState } from 'react';
 
 export interface DetailInfoModalContentProps {
   params: Record<string, string>;
 }
 
 export const DetailInfoModalContent = ({ params }: DetailInfoModalContentProps) => {
-  const { id, type } = params;
+  const { id } = params;
   if (!id) throw new Error('id is required');
-  const { data: task, isLoading, isError } = useGetTask(id);
 
-  const statusLabel: Record<TaskStatus, string> = {
-    [TaskStatus.CREATED]: 'Создана',
-    [TaskStatus.IN_PROGRESS]: 'В работе',
-    [TaskStatus.DECLINED]: 'Отклонена',
-    [TaskStatus.APPROVED]: 'Завершена',
-  };
+  const { data: task, isLoading, isError, dataUpdatedAt } = useGetTask(id);
+  const { data: usersData } = useGetUsers();
+  const users = Array.isArray(usersData) ? usersData : [];
+  const { mutateAsync: saveTask } = useUpdateTask();
+  const { mutateAsync: sendComment, isPending: sendingComment } = usePostTaskComment();
 
-  const typeLabel: Record<TaskType, string> = {
-    [TaskType.FEATURE]: 'Feature',
-    [TaskType.BUG]: 'Bug',
-    [TaskType.HOTFIX]: 'Hotfix',
-  };
+  const [commentText, setCommentText] = useState('');
 
-  const priorityLabel: Record<TaskPriority, string> = {
-    [TaskPriority.LOW]: 'Низкий',
-    [TaskPriority.MEDIUM]: 'Средний',
-    [TaskPriority.HIGH]: 'Высокий',
-    [TaskPriority.CRITICAL]: 'Критический',
-  };
-
-  const infoRows = [
-    { label: 'ID', value: task?.id },
-    { label: 'Тип источника', value: type || 'task' },
-    { label: 'Дедлайн', value: task?.todoTime },
-    { label: 'Создано', value: task?.createDateTime },
-  ];
+  const userNameById = useMemo(() => {
+    const m = new Map<string, string>();
+    users.forEach((u) => m.set(u.id, u.name));
+    return m;
+  }, [users]);
 
   if (isLoading) {
     return (
@@ -59,74 +49,44 @@ export const DetailInfoModalContent = ({ params }: DetailInfoModalContentProps) 
     );
   }
 
+  const savePatch = async (payload: IUpdateTaskPayload): Promise<void> => {
+    await saveTask({ id: task.id, payload });
+  };
+
+  const assigneeLabel = (userId: string) => {
+    if (!userId) return 'Не назначен';
+    return userNameById.get(userId) ?? userId;
+  };
+
+  const currentUserId = users[0]?.id ?? '';
+  const currentUserName = currentUserId ? userNameById.get(currentUserId) ?? 'Пользователь' : 'Пользователь';
+
+  const submitComment = async () => {
+    const text = commentText.trim();
+    if (!text || !currentUserId) return;
+    await sendComment({ taskId: task.id, payload: { userId: currentUserId, text } });
+    setCommentText('');
+  };
+
   return (
     <StyleBox>
-      <Stack spacing={2}>
-        <Stack spacing={1}>
-          <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.3 }}>
-            {task.title}
-          </Typography>
-
-          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-            <Chip
-              size="small"
-              label={statusLabel[task.status]}
-              color="info"
-              variant="outlined"
-              sx={{ fontWeight: 600 }}
-            />
-            <Chip
-              size="small"
-              label={typeLabel[task.type]}
-              color="primary"
-              variant="outlined"
-              sx={{ fontWeight: 600 }}
-            />
-            <Chip
-              size="small"
-              label={priorityLabel[task.priority]}
-              color="warning"
-              variant="outlined"
-              sx={{ fontWeight: 600 }}
-            />
-          </Stack>
-        </Stack>
-
-        <Divider />
-
-        <Stack spacing={0.75}>
-          <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase' }}>
-            Описание
-          </Typography>
-          <Typography id="detail-info-modal-description" variant="body2" color="text.secondary">
-            {task.description || 'Описание отсутствует'}
-          </Typography>
-        </Stack>
-
-        <Stack
-          spacing={1}
-          sx={{
-            p: 1.5,
-            borderRadius: 2,
-            border: (theme) => `1px solid ${theme.palette.divider}`,
-            backgroundColor: (theme) => theme.palette.action.hover,
-          }}
-        >
-          {infoRows.map((row) => (
-            <Stack key={row.label} direction="row" justifyContent="space-between" gap={1.5}>
-              <Typography variant="caption" color="text.secondary">
-                {row.label}
-              </Typography>
-              <Typography
-                variant="caption"
-                fontWeight={600}
-                sx={{ textAlign: 'right', wordBreak: 'break-word' }}
-              >
-                {row.value}
-              </Typography>
-            </Stack>
-          ))}
-        </Stack>
+      <Stack spacing={2.5} divider={<Divider flexItem />}>
+        <TaskEditFields
+          task={task}
+          users={users}
+          dataUpdatedAt={dataUpdatedAt}
+          onSavePatch={savePatch}
+          assigneeLabel={assigneeLabel}
+        />
+        <TaskCommentsSection
+          comments={task.comments ?? []}
+          currentUserName={currentUserName}
+          commentText={commentText}
+          setCommentText={setCommentText}
+          sendingComment={sendingComment}
+          canSubmitComment={Boolean(currentUserId)}
+          onSubmitComment={submitComment}
+        />
       </Stack>
     </StyleBox>
   );

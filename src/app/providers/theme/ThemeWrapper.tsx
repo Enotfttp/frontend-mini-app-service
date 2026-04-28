@@ -13,9 +13,33 @@ export const ThemeWrapper: React.FC<Props> = ({ children }) => {
   const theme = useMemo(
     () =>
       createTheme({
-        palette: { mode },
+        palette: {
+          mode,
+          ...(mode === 'dark'
+            ? {
+                background: {
+                  default: '#0c1015',
+                  paper: '#151b24',
+                },
+              }
+            : {
+                background: {
+                  default: '#f0f3f8',
+                  paper: '#ffffff',
+                },
+              }),
+        },
         typography: {
           fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+        },
+        components: {
+          MuiPaper: {
+            styleOverrides: {
+              root: {
+                backgroundImage: 'none',
+              },
+            },
+          },
         },
       }),
     [mode],

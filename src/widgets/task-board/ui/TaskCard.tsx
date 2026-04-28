@@ -65,7 +65,6 @@ export const TaskCard: React.FC<Props> = ({ task, status, users, isDragOverlay }
   };
 
   const assignee = Array.isArray(users) ? users.find((u) => u.id === task.userId) : undefined;
-  const shortId = task.id.length > 8 ? task.id.slice(0, 8).toUpperCase() : task.id;
 
   return (
     <TaskCardPaper
@@ -80,10 +79,10 @@ export const TaskCard: React.FC<Props> = ({ task, status, users, isDragOverlay }
       onClick={handleOpenModal}
     >
       <TaskCardContent>
-        {/* Header: ID + delete */}
+        {/* Header: Task Number + delete */}
         <TaskCardHeader>
           <Typography variant="caption" color="text.secondary" fontFamily="monospace">
-            #{shortId}
+            Задача #{task.taskNumber}
           </Typography>
           <DeleteTaskButton
             size="small"

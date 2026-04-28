@@ -12,8 +12,8 @@ export interface ModalRouteEntry {
 export const modalRouteConfig = {
   'detail-info': {
     component: DetailInfoModalContent,
-    title: 'Детали',
-    customWidth: '440px',
+    title: '',
+    customWidth: '560px',
     paramKeys: ['id', 'type'] as const,
   },
 } as const satisfies Record<string, ModalRouteEntry>;
